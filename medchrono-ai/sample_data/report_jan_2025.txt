@@ -1,0 +1,7 @@
+Report Date: 2025-01-10
+Patient Lab Report
+Hemoglobin: 10.5 g/dL Reference Range: 13.5 - 17.5
+WBC: 11500 /uL Reference Range: 4000 - 11000
+Vitamin D: 14 ng/mL Reference Range: 30 - 100
+HbA1c: 5.6 % Reference Range: 4.0 - 5.6
+LDL Cholesterol: 150 mg/dL Reference Range: 0 - 100
