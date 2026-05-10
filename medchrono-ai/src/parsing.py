@@ -63,30 +63,47 @@ def combine_uploaded_texts(files: Iterable[str | Path]) -> list[dict]:
         )
     return reports
 
-import re
 
-def extract_lab_values(report_text: str) -> list[dict]:
-    """
-    Extract lab values from the report text.
-    This function assumes the text is in a format like:
-    'Hemoglobin: 12.1 g/dL Reference Range: 13.5 - 17.5'
-    """
-    lab_values = []
-    
-    # Regex pattern to match test names and values
-    pattern = r"(?P<test_name>[\w\s]+):\s*(?P<value>[\d.]+)\s*(?P<unit>[a-zA-Z/]+)\s*Reference Range:\s*(?P<ref_low>[\d.]+)\s*-\s*(?P<ref_high>[\d.]+)"
-    
-    # Find all matches in the text
-    matches = re.finditer(pattern, report_text)
+def extract_lab_values(text: str) -> list[dict]:
+    results = []
 
-    for match in matches:
-        lab_values.append({
-            "test_name": match.group("test_name"),
-            "value": match.group("value"),
-            "unit": match.group("unit"),
-            "ref_low": match.group("ref_low"),
-            "ref_high": match.group("ref_high"),
-            "status": "low" if float(match.group("value")) < float(match.group("ref_low")) else "normal"
-        })
-    
-    return lab_values
+    report_date_match = re.search(
+        r"Report Date:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})",
+        text,
+        re.IGNORECASE,
+    )
+    report_date = report_date_match.group(1) if report_date_match else ""
+
+    pattern = re.compile(
+        r"Test Name:\s*(?P<test_name>.+?)\s*"
+        r"Value:\s*(?P<value>[0-9.]+)\s*"
+        r"Unit:\s*(?P<unit>[^\n]+)\s*"
+        r"Reference Range:\s*(?P<ref_low>[0-9.]+)\s*-\s*(?P<ref_high>[0-9.]+)",
+        re.IGNORECASE | re.DOTALL,
+    )
+
+    for match in pattern.finditer(text):
+        value = float(match.group("value"))
+        ref_low = float(match.group("ref_low"))
+        ref_high = float(match.group("ref_high"))
+
+        if value < ref_low:
+            status = "low"
+        elif value > ref_high:
+            status = "high"
+        else:
+            status = "normal"
+
+        results.append(
+            {
+                "report_date": report_date,
+                "test_name": match.group("test_name").strip(),
+                "value": value,
+                "unit": match.group("unit").strip(),
+                "ref_low": ref_low,
+                "ref_high": ref_high,
+                "status": status,
+            }
+        )
+
+    return results
